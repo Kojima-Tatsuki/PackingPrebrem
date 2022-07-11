@@ -1,3 +1,4 @@
+from bottomLeft import ButtonLeftAlgolism
 from box_file import Box, Box_Generater
 from rect_file import Rect, Section
 
@@ -15,6 +16,8 @@ def main():
     print("BOX (x, y)")
     for index, box in enumerate(boxes):
         print("[" + str(index) + "] " + box.to_string())
+
+    bl = ButtonLeftAlgolism(boxes)
 
 
 if __name__ == "__main__":
