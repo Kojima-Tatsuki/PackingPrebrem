@@ -6,18 +6,18 @@ BOX_COUNT = 3
 
 
 def main():
-    print("Section (l, b, t, r), [x, y]")
+    print("Section (l, b, t, r), [w, h]")
     section = Section(Box(4, 7))
     print(section.to_string())
 
     gen = Box_Generater()
     boxes = gen.create(BOX_COUNT)
 
-    print("BOX (x, y)")
+    print("BOX (w, h)")
     for index, box in enumerate(boxes):
-        print("[" + str(index) + "] " + box.to_string())
+        print("[{}] ".format(index) + box.to_string())
 
-    bl = ButtonLeftAlgolism(boxes)
+    bl = ButtonLeftAlgolism(section, boxes)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import random
 
 BOX_SIZE = 5
 
+
 class Box:
     """ 座標を持たない箱 """
     height: int
@@ -13,7 +14,7 @@ class Box:
         self.height = height
 
     def to_string(self) -> str:
-        return "(" + str(self.width) + ", " + str(self.height) + ")"
+        return "({}, {})".format(self.width, self.height)
 
 # box をランダムに生成する
 
@@ -27,7 +28,7 @@ class Box_Generater:
         ----------
         count : int
             生成するBoxの数
-        
+
         Returns
         ----------
         list[Box]

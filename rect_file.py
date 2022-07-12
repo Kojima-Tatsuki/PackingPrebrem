@@ -4,6 +4,16 @@ import re
 from box_file import Box
 
 
+class Point:
+    """ 2次元座標系での点 """
+    x: int
+    y: int
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Rect:
     """ 座標を持つ箱 """
     left: int
@@ -38,6 +48,16 @@ class Rect:
         self.top = box.height
         self.bottom = 0
 
+    def Equals(self, other):
+        if (self == other):
+            return True
+        return False
+
+    def IsOverlap(self, point: Point) -> bool:
+        if (self.left <= point.x and point.x <= self.right and self.top >= point.y and self.bottom >= point.y):
+            return True
+        return False
+
     def to_string(self) -> str:
         return "[" + str(self.left) + ", " + str(self.right) + ", " + \
             str(self.top) + ", " + str(self.bottom) + "]," + \
@@ -50,13 +70,14 @@ class Space():
     def __init__(self, rect: Rect) -> None:
         self.rect = rect
 
+
 class Section(Rect):
     spaces: list[Space]
-    
+
     def __init__(self, size: Box):
         super().__init__(size)
         self.spaces = list()
         self.spaces.append(Space(size))
 
-    def appendable(box: Box):
+    def IsAppendable(box: Box):
         return False
