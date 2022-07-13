@@ -13,6 +13,9 @@ class Point:
         self.x = x
         self.y = y
 
+    def to_string(self) -> str:
+        return "{}, {}".format(self.x, self.y)
+
 
 class Rect:
     """ 座標を持つ箱 """
@@ -42,26 +45,21 @@ class Rect:
         self.top = top
         self.bottom = bottom
 
-    def __init__(self, box: Box):
-        self.left = 0
-        self.right = box.width
-        self.top = box.height
-        self.bottom = 0
-
     def Equals(self, other):
         if (self == other):
             return True
         return False
 
     def IsOverlap(self, point: Point) -> bool:
-        if (self.left <= point.x and point.x <= self.right and self.top >= point.y and self.bottom >= point.y):
+        if (self.left < point.x and point.x < self.right and self.top > point.y and point.y > self.bottom):
             return True
         return False
 
+    def IsOverlapRect(self, rect) -> bool:
+        return max(self.left, rect.left) < min(self.right, rect.right) and max(self.bottom, rect.bottom) < min(self.top, rect.top)
+
     def to_string(self) -> str:
-        return "[" + str(self.left) + ", " + str(self.right) + ", " + \
-            str(self.top) + ", " + str(self.bottom) + "]," + \
-            "[" + str(self.width) + ", " + str(self.height) + "]"
+        return "[{}, {}], [{}, {}]".format(self.left, self.bottom, self.width, self.height)
 
 
 class Space():
@@ -75,9 +73,19 @@ class Section(Rect):
     spaces: list[Space]
 
     def __init__(self, size: Box):
-        super().__init__(size)
+        super().__init__(0, size.width, size.height, 0)
         self.spaces = list()
         self.spaces.append(Space(size))
 
-    def IsAppendable(box: Box):
-        return False
+    def IsAppendable(self, rect: Rect):
+        """ 母材の範囲内に存在するか """
+
+        if self.left > rect.left:
+            return False
+        if self.right < rect.right:
+            return False
+        if self.bottom > rect.bottom:
+            return False
+        if self.top < rect.top:
+            return False
+        return True

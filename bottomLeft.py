@@ -3,47 +3,79 @@ from box_file import Box
 from rect_file import Point, Rect, Section
 
 
+class BLStablePoint:
+    """ BL安定点 """
+    __MotherRect: Rect
+    """ 母材 """
+
+    __PushedBoxes: list[Rect]
+    """ 設置済みの箱のリスト """
+
+    def __init__(self, motherRect, pushedBoxes):
+        self.__MotherRect = motherRect
+        self.__PushedBoxes = pushedBoxes
+
+
 class ButtonLeftAlgolism:
     """ BLのアルゴリズム """
 
-    MotherRect: Section
+    MotherSection: Section
     """ 母材 """
 
-    Rects: list[Rect]
+    Rects: list[Box]
     """ 設置する箱のリスト """
 
     PushedBoxes: list[Rect]
     """ 設置済みの箱のリスト """
 
-    def __init__(self, motherBox: Section, rects: list[Rect]) -> None:
+    def __init__(self, motherBox: Section, rects: list[Box]) -> None:
         """ rectsの順に設置する """
-        self.MotherRect = Section(motherBox)
+        self.MotherSection = Section(motherBox)
         self.Rects = list(rects)
+        self.PushedBoxes = list()
 
-    def Cal(self) -> int:
+    def Cal(self):
         """ 計算したスコアを返す """
-        stablePoints = self.__GetBLStablePoints()
+        for rect in self.Rects:
+            stablePoints = self.__GetBLStablePoints()
+            if len(stablePoints) == 0:
+                break
+            stablePoints: list[Point] = self.__SortList(stablePoints)
+            for p in stablePoints:
+                rect = Rect(p.x, p.x + rect.width, p.y + rect.height, p.y)
 
-        return self.__GetMaxHeight()
+                if self.MotherSection.IsAppendable(rect) is False:
+                    # print("Mother Block")
+                    continue
+
+                if self.__IsOverlapPushed(rect):
+                    # print("Overlap")
+                    continue
+
+                self.__PushRect(rect)
+                # print("Pushed {}".format(rect.to_string()))
+                break
+
+        return self.PushedBoxes
 
     def __PushRect(self, rect: Rect) -> None:
         """ 箱を追加する """
-        self.Rects.append(rect)
+        self.PushedBoxes.append(rect)
 
     def __Pushable(self, rect: Rect) -> bool:
         """ 制約条件を満たすかを返す, 新たに箱が追加できるかを返す"""
         return False
 
     def __GetBLStablePoints(self) -> list[Point]:
-        """ BL安定点を返す """
+        """ 設置可能なBL安定点を返す """
 
         result = list[Point]()
 
-        self.__AppendPoint(result, Point(self.MotherRect.left, self.MotherRect.bottom))
+        self.__AppendPoint(result, Point(self.MotherSection.left, self.MotherSection.bottom))
 
         for pushed in self.PushedBoxes:
-            self.__AppendPoint(result, Point(pushed.right, self.MotherRect.bottom))
-            self.__AppendPoint(result, Point(self.MotherRect.left, pushed.top))
+            self.__AppendPoint(result, Point(pushed.right, self.MotherSection.bottom))
+            self.__AppendPoint(result, Point(self.MotherSection.left, pushed.top))
 
             for repushed in self.PushedBoxes:
                 if repushed.Equals(pushed):  # 同じものならスキップ
@@ -55,19 +87,27 @@ class ButtonLeftAlgolism:
                 if (pushed.right >= repushed.right):
                     self.__AppendPoint(result, Point(repushed.right, pushed.top))
 
-        return
+        return result
 
-    def __IsOverlap(a: Rect, b: Rect) -> bool:
-        """ AとBが重なっているかを返す """
-        if a.left + a.width > b.left:
-            return True
-        if a.bottom + a.height > b.top:
-            return True
-        if b.left + b.width > a.left:
-            return True
-        if b.bottom + b.height > a.top:
-            return True
+    def __IsOverlapPushed(self, rect: Rect):
+        """ 既に設置済みの箱と重なっているかを返す """
+        for pushed in self.PushedBoxes:
+            if self.__IsOverlap(rect, pushed):
+                return True
         return False
+
+    def __IsOverlap(self, a: Rect, b: Rect) -> bool:
+        """ AとBが重なっているかを返す """
+        # if a.IsOverlap(Point(b.left, b.bottom) or b.IsOverlap(Point(a.left, a.bottom))):
+        #     return True
+        # if a.IsOverlap(Point(b.left, b.top)) or b.IsOverlap(Point(a.left, a.top)):
+        #     return True
+        # if a.IsOverlap(Point(b.right, b.bottom)) or b.IsOverlap(Point(a.right, a.bottom)):
+        #     return True
+        # if a.IsOverlap(Point(b.right, b.top)) or b.IsOverlap(Point(a.right, a.top)):
+        #     return True
+        # return False
+        return a.IsOverlapRect(b)
 
     def __AppendPoint(self, appendedList: list[Point], appendPoint: Point) -> bool:
         """ 点が追加可能か追加しても大丈夫かを判定し、追加する """
@@ -87,20 +127,17 @@ class ButtonLeftAlgolism:
 
     def __GetMaxHeight(self) -> int:
         """ 設置済みの箱の中で最大の高さにあるものの高さを返す """
-        result: int = self.MotherRect.bottom
+        result: int = self.MotherSection.bottom
         for pushed in self.PushedBoxes:
             if result < pushed.top:
                 result = pushed.top
         return result
 
-
-class BLStablePoints:
-    __MotherRect: Rect
-    """ 母材 """
-
-    __PushedBoxes: list[Rect]
-    """ 設置済みの箱のリスト """
-
-    def __init__(self, motherRect, pushedBoxes):
-        self.__MotherRect = motherRect
-        self.__PushedBoxes = pushedBoxes
+    def __SortList(self, list: list[Point]) -> list[Point]:
+        """ 高さ、横順に並び変える """
+        # result = sorted(result, key=lambda x: x.x)
+        result = sorted(list, key=lambda x: x.y)
+        # print("stable")
+        # for p in result:
+        #     print(p.to_string())
+        return result
